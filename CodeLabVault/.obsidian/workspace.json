@@ -23,16 +23,15 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Kandban/DB Scripts.md",
+                "file": "API/Kandban/DB Migration.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "DB Scripts"
+              "title": "DB Migration"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -104,7 +103,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Kandban/DB Scripts.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +112,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for DB Scripts"
+              "title": "Backlinks"
             }
           },
           {
@@ -123,12 +121,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Kandban/DB Scripts.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from DB Scripts"
+              "title": "Outgoing links"
             }
           },
           {
@@ -149,11 +146,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Kandban/DB Scripts.md"
-              },
+              "state": {},
               "icon": "lucide-list",
-              "title": "Outline of DB Scripts"
+              "title": "Outline"
             }
           }
         ]
@@ -173,12 +168,13 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "d5800e6dbae3ea1b",
+  "active": "26f99e3387cb5cfe",
   "lastOpenFiles": [
+    "API/Kandban/DB Migration.md",
+    "API/Kandban/DB Scripts.md",
     "API",
     "Project Process Noter.md",
-    "Kandban/DB Scripts.md",
-    "Kandban",
+    "API/Kandban",
     "Welcome.md"
   ]
 }
