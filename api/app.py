@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from database import init_db, db
 from sqlalchemy import text
+from routes.kanban.board_routes import kanban_bp
 import os
 
 
@@ -17,17 +18,10 @@ def create_app():
 
     print("SQLALCHEMY_DATABASE_URI:", app.config.get("SQLALCHEMY_DATABASE_URI"))
 
+    app.register_blueprint(kanban_bp, url_prefix="/api/kanban")
+
     jwt = JWTManager(app)
     init_db(app) 
-
-    @app.route("/test-db", methods=["GET"])
-    def test_db():
-        try:
-            db.session.execute(text("SELECT 1"))
-            return jsonify({"message": "Database connection successful!"}), 200
-        except Exception as e:
-            return jsonify({"message": f"Database connection error: {e}"}), 500
-
 
     return app
 
