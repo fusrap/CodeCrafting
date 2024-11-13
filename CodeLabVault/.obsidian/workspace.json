@@ -11,10 +11,26 @@
             "id": "26f99e3387cb5cfe",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "API/Kandban/DB Scripts.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "DB Scripts"
+            }
+          },
+          {
+            "id": "2a41991417ae3391",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.7.5"
+              },
+              "icon": "lucide-file",
+              "title": "Release Notes 1.7.5"
             }
           },
           {
@@ -31,7 +47,8 @@
               "title": "DB Migration"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -168,7 +185,7 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "26f99e3387cb5cfe",
+  "active": "2a41991417ae3391",
   "lastOpenFiles": [
     "API/Kandban/DB Migration.md",
     "API/Kandban/DB Scripts.md",
