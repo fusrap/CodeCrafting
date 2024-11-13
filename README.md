@@ -1,3 +1,9 @@
+# Hent dependencies
+
+´´´cmd
+	pip install -r requirements.txt
+´´´
+
 # Byg og Kør Docker-Container
 
 1. **Byg Docker-imagen**:

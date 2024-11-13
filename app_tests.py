@@ -6,21 +6,19 @@ import sys
 def run_tests():
     os.environ['PYTHONPATH'] = os.getcwd()
 
-    # Kør pytest med alle dækningsindstillinger direkte i kommandoen
     result = subprocess.run(
         [
             sys.executable, "-m", "pytest", "test",
             "--cov=routes",
             "--cov-report=term-missing",
-            "--cov-report=html:htmlcov"  # Genererer HTML-rapport i htmlcov-mappen
+            "--cov-report=html:htmlcov" 
         ],
         capture_output=True, text=True
     )
 
-    # Udskriv resultatet fra pytest
     print(result.stdout)
 
-    # Udskriv fejloutput, hvis der var fejl
+
     if result.returncode != 0:
         print("Error running tests:")
         print(result.stderr)
