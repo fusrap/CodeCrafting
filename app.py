@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from sqlalchemy import text
 from database import init_db, db
 from routes.kanban.board_routes import kanban_bp
+from routes.user.user_route import user_bp
+from flasgger import Swagger
 
 # Load environment variables from .env file
 load_dotenv()
@@ -38,18 +40,21 @@ def create_app():
 
     # Register blueprint
     app.register_blueprint(kanban_bp, url_prefix="/kanban")
+    app.register_blueprint(user_bp)
 
-    # Test the database connection on startup
+    swagger = Swagger(app)
+
     with app.app_context():
         try:
-            # Use text('SELECT 1') for the raw SQL execution
             db.session.execute(text('SELECT 1'))
             print("Database connection successful")
         except Exception as e:
             print("Database connection failed:", e)
 
+
     if env == "development":
         app.run()
+
 
     return app
 
