@@ -1,10 +1,10 @@
 import os
 from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from sqlalchemy import text
 from database import init_db, db
-from routes.kanban.board_routes import kanban_bp
 from routes.user.user_route import user_bp
 from flasgger import Swagger
 
@@ -13,6 +13,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
 
     # Determine environment
     env = os.getenv("FLASK_ENV", "development")
@@ -39,7 +40,6 @@ def create_app():
     init_db(app)
 
     # Register blueprint
-    app.register_blueprint(kanban_bp, url_prefix="/kanban")
     app.register_blueprint(user_bp)
 
     swagger = Swagger(app)
