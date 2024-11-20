@@ -1,5 +1,5 @@
 # Use the official Python image as a base
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Set environment variables to prevent Python from buffering stdout and stderr
 ENV PYTHONUNBUFFERED=1
@@ -31,6 +31,7 @@ RUN apt-get update && \
 COPY requirements.txt .
 
 # Install Python dependencies from requirements.txt
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
