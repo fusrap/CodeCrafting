@@ -43,6 +43,7 @@ def create_app():
     app.register_blueprint(user_bp)
 
     swagger = Swagger(app)
+    init_db(app)  # Ensure the database is initialized here
 
     with app.app_context():
         try:
@@ -51,6 +52,12 @@ def create_app():
         except Exception as e:
             print("Database connection failed:", e)
 
+    # Register blueprints
+    app.register_blueprint(kanban_bp, url_prefix="/kanban")
+    app.register_blueprint(user_bp)
+    app.register_blueprint(ping_bp)
+
+    swagger = Swagger(app)
 
     if env == "development":
         app.run()
