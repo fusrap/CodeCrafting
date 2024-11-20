@@ -6,13 +6,16 @@ from sqlalchemy import text
 from database import init_db, db
 from routes.kanban.board_routes import kanban_bp
 from routes.user.user_route import user_bp
+from routes.ping import ping_bp
 from flasgger import Swagger
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
 
     # Determine environment
     env = os.getenv("FLASK_ENV", "development")
@@ -36,13 +39,7 @@ def create_app():
 
     # Initialize extensions
     jwt = JWTManager(app)
-    init_db(app)
-
-    # Register blueprint
-    app.register_blueprint(kanban_bp, url_prefix="/kanban")
-    app.register_blueprint(user_bp)
-
-    swagger = Swagger(app)
+    init_db(app)  # Ensure the database is initialized here
 
     with app.app_context():
         try:
@@ -51,10 +48,15 @@ def create_app():
         except Exception as e:
             print("Database connection failed:", e)
 
+    # Register blueprints
+    app.register_blueprint(kanban_bp, url_prefix="/kanban")
+    app.register_blueprint(user_bp)
+    app.register_blueprint(ping_bp)
+
+    swagger = Swagger(app)
 
     if env == "development":
         app.run()
-
 
     return app
 
