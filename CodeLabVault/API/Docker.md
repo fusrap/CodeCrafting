@@ -15,4 +15,3 @@
 ```http
 	http://localhost:8000/apidocs
 ```
-
