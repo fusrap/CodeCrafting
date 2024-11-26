@@ -9,7 +9,6 @@ from database import init_db, db
 from routes.user.user_route import user_bp
 from flasgger import Swagger
 
-# Load environment variables from .env file
 load_dotenv()
 
 def create_app():

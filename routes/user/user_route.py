@@ -122,13 +122,12 @@ class UserRoutes():
             return jsonify({"error": "Invalid request form"}), 400 
 
         try:
-            # Hash the password using Argon2
             hashed_password = ph.hash(password)
 
             new_account = Account(
                 name=full_name,
                 email=email,
-                password=hashed_password,  # Store Argon2 hash
+                password=hashed_password,
                 role_id=1
             )
             db.session.add(new_account)
