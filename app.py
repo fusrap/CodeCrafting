@@ -4,9 +4,11 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from dotenv import load_dotenv
+from flask_restx import Api
 from sqlalchemy import text
 from database import init_db, db
 from routes.user.user_route import user_bp
+from routes.courses.course_route import api as course_namespace
 from flasgger import Swagger
 
 load_dotenv()
@@ -15,11 +17,9 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
-    # Determine environment
     env = os.getenv("FLASK_ENV", "development")
     print("ENV:" + env)
 
-    # Set configuration based on environment
     if env == "development":
         app.config["DEBUG"] = True
         app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DEV_DATABASE_URL")
@@ -35,13 +35,21 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1) 
 
-    # Initialize extensions
     jwt = JWTManager(app)
     swagger = Swagger(app)
     init_db(app)
 
-    # Register blueprint
     app.register_blueprint(user_bp)
+
+    api = Api(
+    app,
+    version='1.0',
+    title='Learning API',
+    description='',
+    doc='/newdocs'
+    )
+    
+    api.add_namespace(course_namespace, path='/course')
 
     with app.app_context():
         try:
