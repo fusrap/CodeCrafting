@@ -33,6 +33,21 @@ class InputElement(Base):
     answer: Mapped[Optional[str]] = mapped_column(Unicode(255, 'SQL_Latin1_General_CP1_CI_AS'))
 
 
+class Jeopardy(Base):
+    __tablename__ = 'Jeopardy'
+    __table_args__ = (
+        PrimaryKeyConstraint('jeopardy_id', name='PK__Jeopardy__55619D04378367C6'),
+    )
+
+    jeopardy_id: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
+    jeopardy_title: Mapped[str] = mapped_column(Unicode(255, 'SQL_Latin1_General_CP1_CI_AS'))
+    jeopardy_description: Mapped[Optional[str]] = mapped_column(Unicode(collation='SQL_Latin1_General_CP1_CI_AS'))
+    created: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
+
+    JeopardyCells: Mapped[List['JeopardyCells']] = relationship('JeopardyCells', back_populates='jeopardy_cell_jeopardy')
+    Subjects: Mapped[List['Subjects']] = relationship('Subjects', back_populates='subject_jeopardy')
+
+
 class Role(Base):
     __tablename__ = 'Role'
     __table_args__ = (
@@ -103,3 +118,37 @@ class CourseElement(Base):
     created: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
 
     course: Mapped['Course'] = relationship('Course', back_populates='CourseElement')
+
+
+class JeopardyCells(Base):
+    __tablename__ = 'JeopardyCells'
+    __table_args__ = (
+        ForeignKeyConstraint(['jeopardy_cell_jeopardy_id'], ['Jeopardy.jeopardy_id'], ondelete='CASCADE', name='FK__JeopardyC__jeopa__7B264821'),
+        PrimaryKeyConstraint('jeopardy_cell_id', name='PK__Jeopardy__FA902A9F3AFEA41E'),
+        Index('IDX_JeopardyCells_Jeopardy_Id', 'jeopardy_cell_id')
+    )
+
+    jeopardy_cell_id: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
+    jeopardy_cell_value: Mapped[int] = mapped_column(Integer)
+    jeopardy_cell_question: Mapped[str] = mapped_column(Unicode(collation='SQL_Latin1_General_CP1_CI_AS'))
+    jeopardy_cell_answer: Mapped[str] = mapped_column(Unicode(collation='SQL_Latin1_General_CP1_CI_AS'))
+    RowNumber: Mapped[int] = mapped_column(Integer)
+    ColumnNumber: Mapped[int] = mapped_column(Integer)
+    jeopardy_cell_jeopardy_id: Mapped[int] = mapped_column(Integer)
+
+    jeopardy_cell_jeopardy: Mapped['Jeopardy'] = relationship('Jeopardy', back_populates='JeopardyCells')
+
+
+class Subjects(Base):
+    __tablename__ = 'Subjects'
+    __table_args__ = (
+        ForeignKeyConstraint(['subject_jeopardy_id'], ['Jeopardy.jeopardy_id'], ondelete='CASCADE', name='FK__Subjects__subjec__7849DB76'),
+        PrimaryKeyConstraint('subject_Id', name='PK__Subjects__5007F248494E295F'),
+        Index('IDX_Subjects_Jeopardy_Id', 'subject_Id')
+    )
+
+    subject_Id: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
+    subject_name: Mapped[str] = mapped_column(Unicode(255, 'SQL_Latin1_General_CP1_CI_AS'))
+    subject_jeopardy_id: Mapped[int] = mapped_column(Integer)
+
+    subject_jeopardy: Mapped['Jeopardy'] = relationship('Jeopardy', back_populates='Subjects')

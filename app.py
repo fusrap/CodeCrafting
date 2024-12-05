@@ -9,6 +9,7 @@ from sqlalchemy import text
 from database import init_db, db
 from routes.user.user_route import user_bp
 from routes.courses.course_route import api as course_namespace
+from routes.games.jeopardy_route import api as jeopardy_namespace
 from flasgger import Swagger
 
 load_dotenv()
@@ -50,6 +51,7 @@ def create_app():
     )
     
     api.add_namespace(course_namespace, path='/course')
+    api.add_namespace(jeopardy_namespace, path='/jeopardy')
 
     with app.app_context():
         try:
