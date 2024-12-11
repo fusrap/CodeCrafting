@@ -124,8 +124,7 @@ class JeopardyCells(Base):
     __tablename__ = 'JeopardyCells'
     __table_args__ = (
         ForeignKeyConstraint(['jeopardy_cell_jeopardy_id'], ['Jeopardy.jeopardy_id'], ondelete='CASCADE', name='FK__JeopardyC__jeopa__7B264821'),
-        PrimaryKeyConstraint('jeopardy_cell_id', name='PK__Jeopardy__FA902A9F3AFEA41E'),
-        Index('IDX_JeopardyCells_Jeopardy_Id', 'jeopardy_cell_id')
+        PrimaryKeyConstraint('jeopardy_cell_id', name='PK__Jeopardy__FA902A9F3AFEA41E')
     )
 
     jeopardy_cell_id: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
@@ -143,8 +142,7 @@ class Subjects(Base):
     __tablename__ = 'Subjects'
     __table_args__ = (
         ForeignKeyConstraint(['subject_jeopardy_id'], ['Jeopardy.jeopardy_id'], ondelete='CASCADE', name='FK__Subjects__subjec__7849DB76'),
-        PrimaryKeyConstraint('subject_Id', name='PK__Subjects__5007F248494E295F'),
-        Index('IDX_Subjects_Jeopardy_Id', 'subject_Id')
+        PrimaryKeyConstraint('subject_Id', name='PK__Subjects__5007F248494E295F')
     )
 
     subject_Id: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)

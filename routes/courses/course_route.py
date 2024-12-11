@@ -6,7 +6,7 @@ from models import Course, CourseElement, TextElement, InputElement
 
 api = Namespace('course', description='Course-related operations')
 
-# Define models for Swagger documentation
+
 course_element_model = api.model('CourseElement', {
     "type": fields.String(description="The type of the element (e.g., 'Text' or 'Input')"),
     "text": fields.String(description="Text content for text elements", required=False),
@@ -31,8 +31,6 @@ courses_model = api.model('CoursesResponse', {
     "courses": fields.List(fields.Nested(course_model), description="List of all courses")
 })
 
-
-# Helper methods for adding elements
 def add_text_element(text):
     text_element = TextElement(
         text_=text
@@ -138,10 +136,7 @@ class CourseResource(Resource):
         Fetch all courses.
         """
         try:
-            # Fetch all courses from the database
             courses = db.session.query(Course).all()
-
-            # Serialize the courses into a list of dictionaries
             serialized_courses = [
                 {
                     "id": course.course_id,
@@ -160,4 +155,80 @@ class CourseResource(Resource):
 
         except Exception as e:
             print(f"Error fetching courses: {e}")
+            return {"error": "An unexpected error occurred"}, 500
+        
+
+
+@api.route('/<int:course_id>')
+class CourseById(Resource):
+
+    @api.doc(
+        description="Retrieve a course by its ID",
+        params={"course_id": "The ID of the course to retrieve"},
+        responses={
+            200: "Course retrieved successfully",
+            404: "Course not found",
+            500: "An error occurred while retrieving the course"
+        }
+    )
+    @cross_origin()
+    def get(self, course_id):
+        """
+        Retrieve a course by its ID.
+        """
+        try:
+            course = db.session.query(Course).filter_by(course_id=course_id).first()
+
+            if not course:
+                return {"error": f"Course with ID {course_id} not found"}, 404
+
+            course_data = {
+                "id": course.course_id,
+                "title": course.course_title,
+                "description": course.course_description,
+                "created": course.created.strftime('%Y-%m-%d %H:%M:%S') if course.created else None
+            }
+
+            return {"message": "Course retrieved successfully", "course": course_data}, 200
+
+        except SQLAlchemyError as e:
+            print(f"Database error: {e}")
+            return {"error": "An error occurred while retrieving the course"}, 500
+
+        except Exception as e:
+            print(f"Error retrieving course: {e}")
+            return {"error": "An unexpected error occurred"}, 500
+
+    @api.doc(
+        description="Delete a course by ID",
+        params={"course_id": "The ID of the course to delete"},
+        responses={
+            200: "Course deleted successfully",
+            404: "Course not found",
+            500: "An error occurred while deleting the course"
+        }
+    )
+    @cross_origin()
+    def delete(self, course_id):
+        """
+        Delete a course by its ID.
+        """
+        try:
+            course = db.session.query(Course).filter_by(course_id=course_id).first()
+
+            if not course:
+                return {"error": f"Course with ID {course_id} not found"}, 404
+
+            db.session.delete(course)
+            db.session.commit()
+
+            return {"message": f"Course with ID {course_id} deleted successfully"}, 200
+
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"Database error: {e}")
+            return {"error": "An error occurred while deleting the course"}, 500
+
+        except Exception as e:
+            print(f"Error deleting course: {e}")
             return {"error": "An unexpected error occurred"}, 500
