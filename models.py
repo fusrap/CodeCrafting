@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 class Course(Base):
     __tablename__ = 'Course'
     __table_args__ = (
-        PrimaryKeyConstraint('course_id', name='PK__Course__8F1EF7AE546254B9'),
+        PrimaryKeyConstraint('course_id', name='PK__Course__8F1EF7AE36957CE7'),
     )
 
     course_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -25,7 +25,7 @@ class Course(Base):
 class InputElement(Base):
     __tablename__ = 'InputElement'
     __table_args__ = (
-        PrimaryKeyConstraint('input_element_id', name='PK__InputEle__13DEF51292F88B1C'),
+        PrimaryKeyConstraint('input_element_id', name='PK__InputEle__13DEF5123CA90887'),
     )
 
     input_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -64,7 +64,7 @@ class Role(Base):
 class TextElement(Base):
     __tablename__ = 'TextElement'
     __table_args__ = (
-        PrimaryKeyConstraint('text_element_id', name='PK__TextElem__69BCDBBC587B2B45'),
+        PrimaryKeyConstraint('text_element_id', name='PK__TextElem__69BCDBBC66B3FF65'),
     )
 
     text_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -108,7 +108,7 @@ class CourseElement(Base):
     __tablename__ = 'CourseElement'
     __table_args__ = (
         ForeignKeyConstraint(['course_id'], ['Course.course_id'], ondelete='CASCADE', name='FK_CourseElement_Course'),
-        PrimaryKeyConstraint('course_element_id', name='PK__CourseEl__739140BEFD554611')
+        PrimaryKeyConstraint('course_element_id', name='PK__CourseEl__739140BE34758D31')
     )
 
     course_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)

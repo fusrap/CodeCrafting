@@ -1,5 +1,6 @@
 from flask_cors import cross_origin
 from flask_restx import Namespace, Resource, fields, abort
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from database import db
 from models import Course, CourseElement, TextElement, InputElement
@@ -199,6 +200,9 @@ class CourseById(Resource):
             print(f"Error retrieving course: {e}")
             return {"error": "An unexpected error occurred"}, 500
 
+
+@api.route('/<int:course_id>')
+class CourseResource(Resource):
     @api.doc(
         description="Delete a course by ID",
         params={"course_id": "The ID of the course to delete"},
@@ -211,15 +215,17 @@ class CourseById(Resource):
     @cross_origin()
     def delete(self, course_id):
         """
-        Delete a course by its ID.
+        Delete a course by its ID using raw SQL.
         """
         try:
-            course = db.session.query(Course).filter_by(course_id=course_id).first()
+            course_exists_query = text("SELECT 1 FROM Course WHERE course_id = :course_id")
+            result = db.session.execute(course_exists_query, {"course_id": course_id}).fetchone()
 
-            if not course:
+            if not result:
                 return {"error": f"Course with ID {course_id} not found"}, 404
 
-            db.session.delete(course)
+            delete_course_query = text("DELETE FROM Course WHERE course_id = :course_id")
+            db.session.execute(delete_course_query, {"course_id": course_id})
             db.session.commit()
 
             return {"message": f"Course with ID {course_id} deleted successfully"}, 200
