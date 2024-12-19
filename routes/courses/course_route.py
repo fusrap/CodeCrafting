@@ -164,7 +164,7 @@ class CourseResource(Resource):
 class CourseById(Resource):
 
     @api.doc(
-        description="Retrieve a course by its ID",
+        description="Retrieve a course by its ID, including its content elements",
         params={"course_id": "The ID of the course to retrieve"},
         responses={
             200: "Course retrieved successfully",
@@ -175,19 +175,50 @@ class CourseById(Resource):
     @cross_origin()
     def get(self, course_id):
         """
-        Retrieve a course by its ID.
+        Retrieve a course by its ID, including its content elements.
         """
         try:
+            # Hent kursusdata
             course = db.session.query(Course).filter_by(course_id=course_id).first()
 
             if not course:
                 return {"error": f"Course with ID {course_id} not found"}, 404
 
+            # Hent tilknyttede elementer fra CourseElement
+            course_elements = db.session.query(CourseElement).filter_by(course_id=course_id).all()
+
+            elements_data = []
+            for course_element in course_elements:
+                if course_element.element_type == 'Text':
+                    # Hent tekstdata
+                    text_element = db.session.query(TextElement).filter_by(text_element_id=course_element.element_id).first()
+                    if text_element:
+                        elements_data.append({
+                            "id": course_element.course_element_id,
+                            "type": "Text",
+                            "isEditing": False,  # Du kan justere denne default værdi
+                            "text": text_element.text_
+                        })
+
+                elif course_element.element_type == 'Input':
+                    # Hent inputdata
+                    input_element = db.session.query(InputElement).filter_by(input_element_id=course_element.element_id).first()
+                    if input_element:
+                        elements_data.append({
+                            "id": course_element.course_element_id,
+                            "type": "Input",
+                            "isEditing": False,  # Du kan justere denne default værdi
+                            "label": input_element.label,
+                            "answer": input_element.answer
+                        })
+
+            # Serialiser kursusdataene
             course_data = {
                 "id": course.course_id,
-                "title": course.course_title,
-                "description": course.course_description,
-                "created": course.created.strftime('%Y-%m-%d %H:%M:%S') if course.created else None
+                "courseTitle": course.course_title,
+                "courseDescription": course.course_description,
+                "created": course.created.strftime('%Y-%m-%d %H:%M:%S') if course.created else None,
+                "elements": elements_data  # Tilføj elementer til kursusdata
             }
 
             return {"message": "Course retrieved successfully", "course": course_data}, 200
@@ -199,6 +230,7 @@ class CourseById(Resource):
         except Exception as e:
             print(f"Error retrieving course: {e}")
             return {"error": "An unexpected error occurred"}, 500
+
 
 
 @api.route('/<int:course_id>')
