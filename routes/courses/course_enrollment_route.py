@@ -6,13 +6,15 @@ from models import Course, StudentCourse
 
 api = Namespace('course_enrollment', description='Course Enrollment operations')
 
-from flask_restx import Namespace, Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy.exc import SQLAlchemyError
-from database import db
-from models import Course, StudentCourse
+def get_student_id():
+    student_identity = get_jwt_identity()
+    return student_identity["id"] if isinstance(student_identity, dict) else student_identity
 
-api = Namespace('course_enrollment', description='Course Enrollment operations')
+def get_course(course_id):
+    return db.session.query(Course).filter_by(course_id=course_id).first()
+
+def get_enrollment(student_id, course_id):
+    return db.session.query(StudentCourse).filter_by(student_id=student_id, course_id=course_id).first()
 
 @api.route('/<int:course_id>')
 class CourseEnrollment(Resource):
@@ -22,20 +24,13 @@ class CourseEnrollment(Resource):
         Tilmeld en studerende til et kursus.
         """
         try:
-            student_identity = get_jwt_identity()
-            student_id = student_identity["id"] if isinstance(student_identity, dict) else student_identity
-            print(f"Student ID: {student_id}, Course ID: {course_id}")
+            student_id = get_student_id()
+            course = get_course(course_id)
 
-            course = db.session.query(Course).filter_by(course_id=course_id).first()
             if not course:
-                print("Course not found")
                 return {"error": "Course not found"}, 404
 
-            existing_enrollment = db.session.query(StudentCourse).filter_by(
-                student_id=student_id, course_id=course_id
-            ).first()
-            if existing_enrollment:
-                print("Already enrolled")
+            if get_enrollment(student_id, course_id):
                 return {"message": "Already enrolled"}, 200
 
             new_enrollment = StudentCourse(student_id=student_id, course_id=course_id)
@@ -45,7 +40,6 @@ class CourseEnrollment(Resource):
             return {"message": "Enrollment successful"}, 201
 
         except SQLAlchemyError as e:
-            print(f"Database error: {e}")
             db.session.rollback()
             return {"error": "An error occurred while enrolling in the course"}, 500
 
@@ -55,29 +49,20 @@ class CourseEnrollment(Resource):
         Afmeld en studerende fra et kursus.
         """
         try:
-            student_identity = get_jwt_identity()
-            student_id = student_identity["id"] if isinstance(student_identity, dict) else student_identity
-            print(f"Student ID: {student_id}, Course ID: {course_id}")
+            student_id = get_student_id()
+            enrollment = get_enrollment(student_id, course_id)
 
-            enrollment = db.session.query(StudentCourse).filter_by(student_id=student_id, course_id=course_id).first()
             if not enrollment:
-                print("Enrollment not found")  
-                return {
-                    "error": "Enrollment not found. You are not enrolled in this course."
-                }, 404
+                return {"error": "Enrollment not found. You are not enrolled in this course."}, 404
 
             db.session.delete(enrollment)
             db.session.commit()
 
-            print("Unenrollment successful")
             return {"message": "Unenrollment successful"}, 200
 
         except SQLAlchemyError as e:
-            print(f"Database error: {e}") 
             db.session.rollback()
             return {"error": "An error occurred while unenrolling"}, 500
-
-
 
     @jwt_required()
     def get(self, course_id):
@@ -85,11 +70,9 @@ class CourseEnrollment(Resource):
         Tjek status for, om en studerende er tilmeldt et kursus.
         """
         try:
-            student_identity = get_jwt_identity()
-            student_id = student_identity["id"] if isinstance(student_identity, dict) else student_identity
-            print(f"Student ID: {student_id}, Course ID: {course_id}")  
+            student_id = get_student_id()
+            enrollment = get_enrollment(student_id, course_id)
 
-            enrollment = db.session.query(StudentCourse).filter_by(student_id=student_id, course_id=course_id).first()
             if not enrollment:
                 return {"status": "Not enrolled"}, 200
 
@@ -99,6 +82,4 @@ class CourseEnrollment(Resource):
             }, 200
 
         except SQLAlchemyError as e:
-            print(f"Database error: {e}")
             return {"error": "An error occurred while checking enrollment status"}, 500
-
