@@ -1,12 +1,13 @@
 from flask_restx import Namespace, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import jsonify
 from sqlalchemy.exc import SQLAlchemyError
 from database import db
 from models import Course, StudentCourse
 
 api = Namespace('course_enrollment', description='Course Enrollment operations')
 
-def get_student_id():
+def get_user_id():
     student_identity = get_jwt_identity()
     return student_identity["id"] if isinstance(student_identity, dict) else student_identity
 
@@ -24,7 +25,7 @@ class CourseEnrollment(Resource):
         Tilmeld en studerende til et kursus.
         """
         try:
-            student_id = get_student_id()
+            student_id = get_user_id()
             course = get_course(course_id)
 
             if not course:
@@ -49,7 +50,7 @@ class CourseEnrollment(Resource):
         Afmeld en studerende fra et kursus.
         """
         try:
-            student_id = get_student_id()
+            student_id = get_user_id()
             enrollment = get_enrollment(student_id, course_id)
 
             if not enrollment:
@@ -70,7 +71,7 @@ class CourseEnrollment(Resource):
         Tjek status for, om en studerende er tilmeldt et kursus.
         """
         try:
-            student_id = get_student_id()
+            student_id = get_user_id()
             enrollment = get_enrollment(student_id, course_id)
 
             if not enrollment:
@@ -83,3 +84,31 @@ class CourseEnrollment(Resource):
 
         except SQLAlchemyError as e:
             return {"error": "An error occurred while checking enrollment status"}, 500
+        
+    @api.route('/<int:course_id>/complete')
+    class CourseCompletion(Resource):
+        @jwt_required()
+        def post(self, course_id):
+            """
+            Marker et kursus som gennemført for en studerende.
+            """
+            user_id = get_user_id() 
+            try:
+                enrollment = db.session.query(StudentCourse).filter_by(
+                    course_id=course_id, student_id=user_id
+                ).first()
+                
+                if not enrollment:
+                    return {"error": "Enrollment not found"}, 404
+                
+                enrollment.completed = True
+                db.session.commit()
+
+                return {"message": "Kursus gennemført"}, 200
+
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                print(f"Error completing course: {str(e)}") 
+                return {"error": "An error occurred while completing the course"}, 500
+
+
