@@ -1,3 +1,4 @@
+from flask import app, current_app
 from flask_restx import Namespace, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import jsonify
@@ -85,11 +86,38 @@ class CourseEnrollment(Resource):
         except SQLAlchemyError as e:
             return {"error": "An error occurred while checking enrollment status"}, 500
 
-
-@api.route('/<int:course_id>/completion-status')
-class CourseCompletionStatus(Resource):  
+    
+@api.route('/<int:course_id>/complete')
+class CourseCompletion(Resource):
     @jwt_required()
-    def get(self, course_id): 
+    def post(self, course_id):
+        """
+        Marker et kursus som gennemført for en studerende.
+        """
+        user_id = get_user_id()
+        try:
+            enrollment = db.session.query(StudentCourse).filter_by(
+                course_id=course_id, student_id=user_id
+            ).first()
+
+            if not enrollment:
+                return {"error": "Enrollment not found"}, 404
+
+            enrollment.completed = True
+            db.session.commit()
+
+            return {"message": "Kursus gennemført"}, 200
+
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"Error completing course: {str(e)}")
+            return {"error": "An error occurred while completing the course"}, 500
+
+
+@api.route('/<int:course_id>/complete')
+class CourseCompletionStatus(Resource):
+    @jwt_required()
+    def get(self, course_id):
         """
         Tjek, om et kursus er gennemført af en studerende.
         """
@@ -100,40 +128,15 @@ class CourseCompletionStatus(Resource):
             ).first()
 
             if not enrollment:
+                print(f"No enrollment found for course_id={course_id}, user_id={user_id}")
                 return {"completed": False, "message": "Not enrolled in the course"}, 404
 
             completed = getattr(enrollment, "completed", False)
             return {"completed": completed}, 200
 
         except SQLAlchemyError as e:
-            print(f"Error checking completion status: {str(e)}")
+            print(f"Database error while checking course completion status: {e}")
             return {"error": "An error occurred while checking course completion status"}, 500
 
-    
-@api.route('/<int:course_id>/complete')
-class CourseCompletion(Resource):
-    @jwt_required()
-    def post(self, course_id):
-        """
-        Marker et kursus som gennemført for en studerende.
-        """
-        user_id = get_user_id() 
-        try:
-            enrollment = db.session.query(StudentCourse).filter_by(
-                course_id=course_id, student_id=user_id
-            ).first()
-            
-            if not enrollment:
-                return {"error": "Enrollment not found"}, 404
-            
-            enrollment.completed = True
-            db.session.commit()
-
-            return {"message": "Kursus gennemført"}, 200
-
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            print(f"Error completing course: {str(e)}") 
-            return {"error": "An error occurred while completing the course"}, 500
 
 
