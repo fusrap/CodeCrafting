@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from argon2 import PasswordHasher, exceptions
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from models import Account
@@ -248,15 +248,68 @@ def authenticate_user():
         except exceptions.VerifyMismatchError:
             return jsonify({"error": "Invalid email or password"}), 401
 
-        access_token = create_access_token(identity={"id": user.account_id, "email": user.email, "name":user.name,"role_id": user.role_id})
-        
+        # Opret access og refresh tokens
+        access_token = create_access_token(identity={"id": user.account_id, "email": user.email, "name": user.name, "role_id": user.role_id})
+        refresh_token = create_refresh_token(identity={"id": user.account_id, "email": user.email, "role_id": user.role_id})
+
         return jsonify({
             "message": "Login successful",
             "access_token": access_token,
+            "refresh_token": refresh_token
         }), 200
 
     except Exception as e:
         return jsonify({"error": "An error occurred during login", "details": str(e)}), 500
+
+    
+
+@user_bp.route('/refresh-token', methods=['POST'])
+@swag_from({
+    'tags': ['Authentication'],
+    'summary': 'Refresh JWT Token',
+    'description': 'Generate a new JWT token using the existing valid token.',
+    'responses': {
+        200: {
+            'description': 'New token generated successfully.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'access_token': {
+                        'type': 'string',
+                        'example': 'eyJ0eXAiOiJKV1QiLCJh...'
+                    }
+                }
+            }
+        },
+        401: {
+            'description': 'Unauthorized due to invalid or expired token.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': 'Token is invalid or expired'
+                    }
+                }
+            }
+        }
+    }
+})
+@user_bp.route('/refresh-token', methods=['POST'], endpoint="user_refresh_token")
+@jwt_required(refresh=True)  # Kræver, at anmodningen bruger et refresh token
+def refresh_token():
+    try:
+        # Henter identity fra refresh token
+        current_user = get_jwt_identity()
+        
+        # Genererer nyt access token
+        new_access_token = create_access_token(identity=current_user)
+        
+        return jsonify({"access_token": new_access_token}), 200
+    except Exception as e:
+        return jsonify({"error": "Unable to refresh token", "details": str(e)}), 401
+
+
 
 
 
