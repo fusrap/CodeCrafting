@@ -54,6 +54,7 @@ def create_app():
     api.add_namespace(course_namespace, path='/course')
     api.add_namespace(jeopardy_namespace, path='/jeopardy')
     api.add_namespace(course_enrollment_api, path='/course/enrollment')
+    
 
     with app.app_context():
         try:
