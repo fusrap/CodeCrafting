@@ -1,5 +1,6 @@
 from flask_cors import cross_origin
 from flask_restx import Namespace, Resource, fields, abort
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from database import db
 from models import Course, CourseElement, TextElement, InputElement
@@ -163,7 +164,7 @@ class CourseResource(Resource):
 class CourseById(Resource):
 
     @api.doc(
-        description="Retrieve a course by its ID",
+        description="Retrieve a course by its ID, including its content elements",
         params={"course_id": "The ID of the course to retrieve"},
         responses={
             200: "Course retrieved successfully",
@@ -174,19 +175,50 @@ class CourseById(Resource):
     @cross_origin()
     def get(self, course_id):
         """
-        Retrieve a course by its ID.
+        Retrieve a course by its ID, including its content elements.
         """
         try:
+            # Hent kursusdata
             course = db.session.query(Course).filter_by(course_id=course_id).first()
 
             if not course:
                 return {"error": f"Course with ID {course_id} not found"}, 404
 
+            # Hent tilknyttede elementer fra CourseElement
+            course_elements = db.session.query(CourseElement).filter_by(course_id=course_id).all()
+
+            elements_data = []
+            for course_element in course_elements:
+                if course_element.element_type == 'Text':
+                    # Hent tekstdata
+                    text_element = db.session.query(TextElement).filter_by(text_element_id=course_element.element_id).first()
+                    if text_element:
+                        elements_data.append({
+                            "id": course_element.course_element_id,
+                            "type": "Text",
+                            "isEditing": False,  # Du kan justere denne default værdi
+                            "text": text_element.text_
+                        })
+
+                elif course_element.element_type == 'Input':
+                    # Hent inputdata
+                    input_element = db.session.query(InputElement).filter_by(input_element_id=course_element.element_id).first()
+                    if input_element:
+                        elements_data.append({
+                            "id": course_element.course_element_id,
+                            "type": "Input",
+                            "isEditing": False,  # Du kan justere denne default værdi
+                            "label": input_element.label,
+                            "answer": input_element.answer
+                        })
+
+            # Serialiser kursusdataene
             course_data = {
                 "id": course.course_id,
-                "title": course.course_title,
-                "description": course.course_description,
-                "created": course.created.strftime('%Y-%m-%d %H:%M:%S') if course.created else None
+                "courseTitle": course.course_title,
+                "courseDescription": course.course_description,
+                "created": course.created.strftime('%Y-%m-%d %H:%M:%S') if course.created else None,
+                "elements": elements_data  # Tilføj elementer til kursusdata
             }
 
             return {"message": "Course retrieved successfully", "course": course_data}, 200
@@ -199,6 +231,10 @@ class CourseById(Resource):
             print(f"Error retrieving course: {e}")
             return {"error": "An unexpected error occurred"}, 500
 
+
+
+@api.route('/<int:course_id>')
+class CourseResource(Resource):
     @api.doc(
         description="Delete a course by ID",
         params={"course_id": "The ID of the course to delete"},
@@ -211,15 +247,17 @@ class CourseById(Resource):
     @cross_origin()
     def delete(self, course_id):
         """
-        Delete a course by its ID.
+        Delete a course by its ID using raw SQL.
         """
         try:
-            course = db.session.query(Course).filter_by(course_id=course_id).first()
+            course_exists_query = text("SELECT 1 FROM Course WHERE course_id = :course_id")
+            result = db.session.execute(course_exists_query, {"course_id": course_id}).fetchone()
 
-            if not course:
+            if not result:
                 return {"error": f"Course with ID {course_id} not found"}, 404
 
-            db.session.delete(course)
+            delete_course_query = text("DELETE FROM Course WHERE course_id = :course_id")
+            db.session.execute(delete_course_query, {"course_id": course_id})
             db.session.commit()
 
             return {"message": f"Course with ID {course_id} deleted successfully"}, 200

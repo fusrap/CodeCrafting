@@ -10,13 +10,14 @@ from database import init_db, db
 from routes.user.user_route import user_bp
 from routes.courses.course_route import api as course_namespace
 from routes.games.jeopardy_route import api as jeopardy_namespace
+from routes.courses.course_enrollment_route import api as course_enrollment_api
 from flasgger import Swagger
 
 load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, supports_credentials=True) 
 
     env = os.getenv("FLASK_ENV", "development")
     print("ENV:" + env)
@@ -34,7 +35,7 @@ def create_app():
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1) 
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=1) 
 
     jwt = JWTManager(app)
     swagger = Swagger(app)
@@ -52,6 +53,8 @@ def create_app():
     
     api.add_namespace(course_namespace, path='/course')
     api.add_namespace(jeopardy_namespace, path='/jeopardy')
+    api.add_namespace(course_enrollment_api, path='/course/enrollment')
+    
 
     with app.app_context():
         try:

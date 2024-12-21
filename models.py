@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import BigInteger, DateTime, ForeignKeyConstraint, Identity, Index, Integer, LargeBinary, PrimaryKeyConstraint, String, Unicode, text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKeyConstraint, Identity, Index, Integer, LargeBinary, PrimaryKeyConstraint, String, Unicode, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 import datetime
 
@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 class Course(Base):
     __tablename__ = 'Course'
     __table_args__ = (
-        PrimaryKeyConstraint('course_id', name='PK__Course__8F1EF7AE546254B9'),
+        PrimaryKeyConstraint('course_id', name='PK__Course__8F1EF7AE36957CE7'),
     )
 
     course_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -20,12 +20,13 @@ class Course(Base):
     created: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
 
     CourseElement: Mapped[List['CourseElement']] = relationship('CourseElement', back_populates='course')
+    StudentCourse: Mapped[List['StudentCourse']] = relationship('StudentCourse', back_populates='course')
 
 
 class InputElement(Base):
     __tablename__ = 'InputElement'
     __table_args__ = (
-        PrimaryKeyConstraint('input_element_id', name='PK__InputEle__13DEF51292F88B1C'),
+        PrimaryKeyConstraint('input_element_id', name='PK__InputEle__13DEF5123CA90887'),
     )
 
     input_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -64,7 +65,7 @@ class Role(Base):
 class TextElement(Base):
     __tablename__ = 'TextElement'
     __table_args__ = (
-        PrimaryKeyConstraint('text_element_id', name='PK__TextElem__69BCDBBC587B2B45'),
+        PrimaryKeyConstraint('text_element_id', name='PK__TextElem__69BCDBBC66B3FF65'),
     )
 
     text_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -102,13 +103,15 @@ class Account(Base):
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
 
     role: Mapped['Role'] = relationship('Role', back_populates='Account')
+    StudentCourse: Mapped[List['StudentCourse']] = relationship('StudentCourse', back_populates='student')
+    StudentCourseElement: Mapped[List['StudentCourseElement']] = relationship('StudentCourseElement', back_populates='student')
 
 
 class CourseElement(Base):
     __tablename__ = 'CourseElement'
     __table_args__ = (
         ForeignKeyConstraint(['course_id'], ['Course.course_id'], ondelete='CASCADE', name='FK_CourseElement_Course'),
-        PrimaryKeyConstraint('course_element_id', name='PK__CourseEl__739140BEFD554611')
+        PrimaryKeyConstraint('course_element_id', name='PK__CourseEl__739140BE34758D31')
     )
 
     course_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
@@ -118,6 +121,7 @@ class CourseElement(Base):
     created: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
 
     course: Mapped['Course'] = relationship('Course', back_populates='CourseElement')
+    StudentCourseElement: Mapped[List['StudentCourseElement']] = relationship('StudentCourseElement', back_populates='course_element')
 
 
 class JeopardyCells(Base):
@@ -150,3 +154,40 @@ class Subjects(Base):
     subject_jeopardy_id: Mapped[int] = mapped_column(Integer)
 
     subject_jeopardy: Mapped['Jeopardy'] = relationship('Jeopardy', back_populates='Subjects')
+
+
+class StudentCourse(Base):
+    __tablename__ = 'StudentCourse'
+    __table_args__ = (
+        ForeignKeyConstraint(['course_id'], ['Course.course_id'], ondelete='CASCADE', name='FK_StudentCourse_Course'),
+        ForeignKeyConstraint(['student_id'], ['Account.account_id'], ondelete='CASCADE', name='FK_StudentCourse_Account'),
+        PrimaryKeyConstraint('student_course_id', name='PK__StudentC__8FA8DF4E97E600F6'),
+        Index('UQ__StudentC__D2C2E9E178CDEDF0', 'student_id', 'course_id', unique=True)
+    )
+
+    student_course_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
+    student_id: Mapped[int] = mapped_column(Integer)
+    course_id: Mapped[int] = mapped_column(BigInteger)
+    enrolled_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
+    completed: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('((0))'))
+
+    course: Mapped['Course'] = relationship('Course', back_populates='StudentCourse')
+    student: Mapped['Account'] = relationship('Account', back_populates='StudentCourse')
+
+
+class StudentCourseElement(Base):
+    __tablename__ = 'StudentCourseElement'
+    __table_args__ = (
+        ForeignKeyConstraint(['course_element_id'], ['CourseElement.course_element_id'], ondelete='CASCADE', name='FK_StudentCourseElement_CourseElement'),
+        ForeignKeyConstraint(['student_id'], ['Account.account_id'], ondelete='CASCADE', name='FK_StudentCourseElement_Account'),
+        PrimaryKeyConstraint('student_course_element_id', name='PK__StudentC__09ECB758970742D7'),
+        Index('UQ__StudentC__DD0A1290ABB1EDA1', 'student_id', 'course_element_id', unique=True)
+    )
+
+    student_course_element_id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1), primary_key=True)
+    student_id: Mapped[int] = mapped_column(Integer)
+    course_element_id: Mapped[int] = mapped_column(BigInteger)
+    completed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(NULL)'))
+
+    course_element: Mapped['CourseElement'] = relationship('CourseElement', back_populates='StudentCourseElement')
+    student: Mapped['Account'] = relationship('Account', back_populates='StudentCourseElement')
