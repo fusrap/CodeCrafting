@@ -10,7 +10,8 @@ from database import init_db, db
 from routes.user.user_route import user_bp
 from routes.courses.course_route import api as course_namespace
 from routes.games.jeopardy_route import api as jeopardy_namespace
-from routes.courses.course_enrollment_route import api as course_enrollment_api
+from routes.courses.course_enrollment_route import api as course_enrollment_namespace
+from routes.user.user_xp_route import api as xp_namespace
 from flasgger import Swagger
 
 load_dotenv()
@@ -44,17 +45,17 @@ def create_app():
     app.register_blueprint(user_bp)
 
     api = Api(
-    app,
-    version='1.0',
-    title='Learning API',
-    description='',
-    doc='/newdocs'
+        app,
+        version='1.0',
+        title='Learning API',
+        description='API for E-learning platform',
+        doc='/newdocs'  
     )
-    
+
     api.add_namespace(course_namespace, path='/course')
     api.add_namespace(jeopardy_namespace, path='/jeopardy')
-    api.add_namespace(course_enrollment_api, path='/course/enrollment')
-    
+    api.add_namespace(course_enrollment_namespace, path='/course/enrollment')
+    api.add_namespace(xp_namespace, path='/xp')  
 
     with app.app_context():
         try:
