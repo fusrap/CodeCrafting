@@ -21,6 +21,7 @@ class Course(Base):
 
     CourseElement: Mapped[List['CourseElement']] = relationship('CourseElement', back_populates='course')
     StudentCourse: Mapped[List['StudentCourse']] = relationship('StudentCourse', back_populates='course')
+    UserXP: Mapped[List['UserXP']] = relationship('UserXP', back_populates='course')
 
 
 class InputElement(Base):
@@ -105,6 +106,7 @@ class Account(Base):
     role: Mapped['Role'] = relationship('Role', back_populates='Account')
     StudentCourse: Mapped[List['StudentCourse']] = relationship('StudentCourse', back_populates='student')
     StudentCourseElement: Mapped[List['StudentCourseElement']] = relationship('StudentCourseElement', back_populates='student')
+    UserXP: Mapped[List['UserXP']] = relationship('UserXP', back_populates='user')
 
 
 class CourseElement(Base):
@@ -191,3 +193,21 @@ class StudentCourseElement(Base):
 
     course_element: Mapped['CourseElement'] = relationship('CourseElement', back_populates='StudentCourseElement')
     student: Mapped['Account'] = relationship('Account', back_populates='StudentCourseElement')
+
+
+class UserXP(Base):
+    __tablename__ = 'UserXP'
+    __table_args__ = (
+        ForeignKeyConstraint(['course_id'], ['Course.course_id'], name='FK__UserXP__course_i__5F492382'),
+        ForeignKeyConstraint(['user_id'], ['Account.account_id'], name='FK__UserXP__user_id__5E54FF49'),
+        PrimaryKeyConstraint('id', name='PK__UserXP__3213E83F22B2CF1E')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer)
+    course_id: Mapped[int] = mapped_column(BigInteger)
+    xp_earned: Mapped[int] = mapped_column(Integer)
+    earned_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('(getdate())'))
+
+    course: Mapped['Course'] = relationship('Course', back_populates='UserXP')
+    user: Mapped['Account'] = relationship('Account', back_populates='UserXP')
