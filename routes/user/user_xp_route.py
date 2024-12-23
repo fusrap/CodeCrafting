@@ -57,4 +57,68 @@ class AddXP(Resource):
             print("Error adding XP:", str(e))
             db.session.rollback()
             return {'error': 'Internal server error', 'details': str(e)}, 500
+        
+@api.route('/<int:user_id>/total')
+class GetUserTotalXP(Resource):
+    @jwt_required()
+    @api.response(200, 'Total XP retrieved successfully.')
+    @api.response(404, 'User not found.')
+    @api.response(500, 'Internal server error.')
+    @api.doc(
+        description="Retrieve the total XP for a specific user by user_id.",
+        params={
+            'user_id': 'The ID of the user for whom to retrieve the total XP.',
+            'Authorization': 'Bearer <access_token>'
+        },
+        responses={
+            200: 'Total XP retrieved successfully.',
+            404: 'User not found.',
+            500: 'Internal server error.'
+        },
+        example={"user_id": 123, "total_xp": 150}
+    )
+    def get(self, user_id):
+        """Get the total XP for a specific user by user_id"""
+        try:
+            total_xp = db.session.query(db.func.sum(UserXP.xp_earned)).filter_by(user_id=user_id).scalar()
+            total_xp = total_xp if total_xp else 0
+
+            print(f"Total XP for user_id={user_id}: {total_xp}")
+            return {'user_id': user_id, 'total_xp': total_xp}, 200
+
+        except Exception as e:
+            print("Error retrieving total XP for user:", str(e))
+            return {'error': 'Internal server error', 'details': str(e)}, 500
+
+
+@api.route('/total')
+class GetCurrentUserTotalXP(Resource):
+    @jwt_required()
+    @api.response(200, 'Total XP retrieved successfully.')
+    @api.response(500, 'Internal server error.')
+    @api.doc(
+        description="Retrieve the total XP for the current authenticated user.",
+        params={'Authorization': 'Bearer <access_token>'},
+        responses={
+            200: 'Total XP retrieved successfully.',
+            500: 'Internal server error.'
+        },
+        example={"user_id": 123, "total_xp": 150}
+    )
+    def get(self):
+        """Get the total XP for the current user"""
+        try:
+            user_id = get_user_id()
+            print("User ID from token:", user_id)
+
+            total_xp = db.session.query(db.func.sum(UserXP.xp_earned)).filter_by(user_id=user_id).scalar()
+            total_xp = total_xp if total_xp else 0
+
+            print(f"Total XP for current user_id={user_id}: {total_xp}")
+            return {'user_id': user_id, 'total_xp': total_xp}, 200
+
+        except Exception as e:
+            print("Error retrieving total XP for current user:", str(e))
+            return {'error': 'Internal server error', 'details': str(e)}, 500
+
 
