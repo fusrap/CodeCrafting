@@ -248,7 +248,6 @@ def authenticate_user():
         except exceptions.VerifyMismatchError:
             return jsonify({"error": "Invalid email or password"}), 401
 
-        # Opret access og refresh tokens
         access_token = create_access_token(identity={"id": user.account_id, "email": user.email, "name": user.name, "role_id": user.role_id})
         refresh_token = create_refresh_token(identity={"id": user.account_id, "email": user.email, "role_id": user.role_id})
 
@@ -296,13 +295,11 @@ def authenticate_user():
     }
 })
 @user_bp.route('/refresh-token', methods=['POST'], endpoint="user_refresh_token")
-@jwt_required(refresh=True)  # Kræver, at anmodningen bruger et refresh token
+@jwt_required(refresh=True)  
 def refresh_token():
     try:
-        # Henter identity fra refresh token
         current_user = get_jwt_identity()
         
-        # Genererer nyt access token
         new_access_token = create_access_token(identity=current_user)
         
         return jsonify({"access_token": new_access_token}), 200

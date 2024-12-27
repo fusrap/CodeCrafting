@@ -37,8 +37,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 8000
+# Copy the SSL certificate and key into the container
+COPY ssl/cert.pem /etc/ssl/cert.pem
+COPY ssl/key.pem /etc/ssl/key.pem
 
-# Start the app using Gunicorn with 4 worker processes
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
+# Expose the HTTPS port
+EXPOSE 443
+
+# Start the app using Gunicorn with HTTPS support
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:443", "--certfile=/etc/ssl/cert.pem", "--keyfile=/etc/ssl/key.pem", "app:app"]
