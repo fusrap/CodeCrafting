@@ -140,3 +140,32 @@ class CourseCompletionStatus(Resource):
 
 
 
+@api.route('/enrolled')
+class EnrolledCourses(Resource):
+    @jwt_required()
+    def get(self):
+        """
+        Hent alle kurser med tilmeldingsstatus for den aktuelle bruger.
+        """
+        try:
+            student_id = get_user_id()
+            enrolled_courses = db.session.query(StudentCourse.course_id).filter_by(student_id=student_id).all()
+            enrolled_course_ids = [course.course_id for course in enrolled_courses]
+
+            courses = db.session.query(Course).all()
+            serialized_courses = [
+                {
+                    "id": course.course_id,
+                    "courseTitle": course.course_title,
+                    "courseDescription": course.course_description,
+                    "enrolled": course.course_id in enrolled_course_ids
+                }
+                for course in courses
+            ]
+
+            return {"courses": serialized_courses}, 200
+
+        except SQLAlchemyError as e:
+            print(f"Database error: {e}")
+            return {"error": "An error occurred while fetching courses"}, 500
+

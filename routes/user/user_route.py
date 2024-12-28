@@ -308,6 +308,99 @@ def refresh_token():
 
 
 
+@user_bp.route('/users/current', methods=['GET'])
+@jwt_required()
+@swag_from({
+    'tags': ['User'],
+    'summary': 'Get Current User Info',
+    'description': 'Retrieve information about the currently authenticated user, including their full name, email, and role.',
+    'responses': {
+        200: {
+            'description': 'Successfully retrieved user information.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'id': {
+                        'type': 'integer',
+                        'example': 1,
+                        'description': 'The unique identifier of the user.'
+                    },
+                    'fullName': {
+                        'type': 'string',
+                        'example': 'John Doe',
+                        'description': 'The full name of the user.'
+                    },
+                    'email': {
+                        'type': 'string',
+                        'example': 'johndoe@example.com',
+                        'description': 'The email address of the user.'
+                    },
+                    'role': {
+                        'type': 'integer',
+                        'example': 1,
+                        'description': 'The role ID of the user (e.g., 1 for regular user, 2 for admin).'
+                    }
+                }
+            }
+        },
+        401: {
+            'description': 'Unauthorized. The user is not authenticated.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': 'Missing Authorization Header',
+                        'description': 'No JWT token was provided.'
+                    }
+                }
+            }
+        },
+        404: {
+            'description': 'User not found.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': 'User not found',
+                        'description': 'No user was found for the given ID.'
+                    }
+                }
+            }
+        },
+        500: {
+            'description': 'Internal server error.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'error': {
+                        'type': 'string',
+                        'example': 'An error occurred while fetching user info',
+                        'description': 'Detailed error message.'
+                    }
+                }
+            }
+        }
+    }
+})
+def get_current_user():
+    """
+    Hent oplysninger om den aktuelle bruger.
+    """
+    try:
+        user_id = get_jwt_identity()
+        user = db.session.query(Account).filter_by(account_id=user_id["id"]).first()
 
+        if not user:
+            return jsonify({"error": "User not found"}), 404
 
+        return jsonify({
+            "id": user.account_id,
+            "fullName": user.name,
+            "email": user.email,
+            "role": user.role_id
+        }), 200
 
+    except Exception as e:
+        return jsonify({"error": "An error occurred while fetching user info", "details": str(e)}), 500
