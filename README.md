@@ -22,3 +22,9 @@
 	http://localhost:8000/apidocs
 ```
 
+4. Docker hub 
+docker build --no-cache -t fusrap/codecraftingflaskapi:prodbuild .
+docker images
+docker push fusrap/codecraftingflaskapi:prodbuild
+
+
