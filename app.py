@@ -28,7 +28,7 @@ def create_app():
         app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DEV_DATABASE_URL")
         print("Running in Development Environment")
     elif env == "production":
-        app.config["DEBUG"] = True 
+        app.config["DEBUG"] = False 
         app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("PROD_DATABASE_URL")
         print("Running in Production Environment")
     else:
@@ -39,7 +39,17 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=60) 
 
     jwt = JWTManager(app)
-    swagger = Swagger(app)
+    swagger = Swagger(app, template={
+    "swagger": "2.0",
+    "info": {
+        "title": "E-Learning Platform API",
+        "description": "API til understøttelse af E-learning platformens funktioner",
+        "version": "1.0.0"
+    },
+    "schemes": ["https"],
+    "host": ".com"
+})
+
     init_db(app)
 
     app.register_blueprint(user_bp)
@@ -67,3 +77,13 @@ def create_app():
     return app
 
 app = create_app()
+
+if __name__ == "__main__":
+    cert_path = os.getenv("CERT_PATH", "ssl/cert.pem")
+    key_path = os.getenv("KEY_PATH", "ssl/key.pem")
+
+    app.run(
+        host="0.0.0.0",
+        port=443,
+        ssl_context=(cert_path, key_path)
+    )
